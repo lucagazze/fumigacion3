@@ -353,3 +353,62 @@ body {
 .step-indicator .step.active {
     background: var(--primary-color);
 }
+
+/* --- OPERACIONES EN FILA --- */
+.operation-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--white);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+.operation-row.completed {
+    background: #f3f7f3;
+    color: var(--text-secondary);
+}
+.operation-cell {
+    flex: 1 1 120px;
+    min-width: 90px;
+    font-size: 0.98rem;
+    padding: 0 0.25rem;
+    word-break: break-word;
+}
+.operation-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.progress-bar-container-xsmall {
+    width: 60px;
+    height: 7px;
+    background: var(--secondary-color);
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+.progress-bar-fill-xsmall {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.2s;
+}
+.progress-text-xsmall {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+@media (max-width: 600px) {
+    .operation-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+        padding: 0.7rem 0.2rem;
+    }
+    .operation-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

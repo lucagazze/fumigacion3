@@ -82,19 +82,18 @@ export async function completeOperation(operationId, totalPills, tons) {
     }
 
     // Paso 2: Obtener el deposit_id de la operación para saber de dónde descontar el stock.
-    // Asumimos que el user_id está vinculado a un solo depósito, obtenemos el deposit_id a través del perfil del usuario de la operación.
     const { data: operationData, error: operationError } = await supabase
         .from('operaciones')
-        .select('user_id, perfiles(deposit_id)')
+        .select('deposit_id')
         .eq('id', operationId)
         .single();
 
-    if (operationError || !operationData || !operationData.perfiles.deposit_id) {
+    if (operationError || !operationData || !operationData.deposit_id) {
         console.error('Error al obtener el depósito para la operación:', operationError);
         throw new Error('No se pudo determinar el depósito para descontar el stock.');
     }
 
-    const depositId = operationData.perfiles.deposit_id;
+    const depositId = operationData.deposit_id;
 
     // Paso 3: Llamar a la función RPC de Supabase para actualizar el stock de forma segura
     const { error: rpcError } = await supabase.rpc('actualizar_stock', {
@@ -110,4 +109,19 @@ export async function completeOperation(operationId, totalPills, tons) {
     }
 
     return { success: true };
+}
+
+export async function getCompletedOperations(userId) {
+    const { data, error } = await supabase
+        .from('operaciones')
+        .select('id, completed_at, pastillas_usadas, toneladas_tratadas, clientes ( name ), areas ( type, code )')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false });
+
+    if (error) {
+        console.error('Error cargando operaciones completadas:', error);
+        throw error;
+    }
+    return data;
 }

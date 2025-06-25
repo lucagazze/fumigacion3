@@ -102,21 +102,14 @@ export function showCalculationView(operation, user) {
     if (calculationResult) calculationResult.innerHTML = '';
     handleModalityChange();
 
-
+    // Listeners robustos y únicos
     if (backToChecklistBtn) {
-        backToChecklistBtn.removeEventListener('click', goBackToChecklist);
-        backToChecklistBtn.addEventListener('click', goBackToChecklist);
+        backToChecklistBtn.onclick = goBackToChecklist;
     }
-
     if (treatmentModalitySelect) {
-        treatmentModalitySelect.removeEventListener('change', handleModalityChange);
-        treatmentModalitySelect.addEventListener('change', handleModalityChange);
+        treatmentModalitySelect.onchange = handleModalityChange;
     }
-
     if (calculationForm) {
-        // Clonamos y reemplazamos el form para limpiar listeners previos del submit
-        const newCalculationForm = calculationForm.cloneNode(true);
-        calculationForm.parentNode.replaceChild(newCalculationForm, calculationForm);
-        newCalculationForm.addEventListener('submit', (e) => handleCalculationSubmit(e, operation));
+        calculationForm.onsubmit = (e) => handleCalculationSubmit(e, operation);
     }
 }

@@ -51,10 +51,10 @@
                 </div>
             </header>
             <main class="app-main">
-                <div id="new-operation-view-container">
-                    <div class="form-container">
-                        <h2>Nueva Operación de Fumigación</h2>
-                        <form id="new-operation-form" class="space-y-6">
+                <div class="dashboard-layout">
+                    <section class="dashboard-section" id="new-operation-section">
+                        <h2>Registrar Nueva Operación</h2>
+                        <form id="new-operation-form">
                             <div>
                                 <label class="label-text" for="cliente-select">Cliente</label>
                                 <select class="input-field form-select" id="cliente-select" name="cliente" required>
@@ -70,7 +70,7 @@
                                 </select>
                             </div>
                             <div id="silo-selector-container" class="hidden">
-                                <label class="label-text" for="silo-selector">Silo</for>
+                                <label class="label-text" for="silo-selector">Silo</label>
                                 <select class="input-field form-select" id="silo-selector" name="silo_selector" required>
                                     <option value="">Cargando...</option>
                                 </select>
@@ -88,11 +88,17 @@
                                 </button>
                             </div>
                         </form>
-                        <div id="open-operations-container" class="mt-8">
-                            <h3 class="text-lg font-bold mb-4">Operaciones en Curso</h3>
-                            <div id="open-operations-list" class="space-y-3"></div>
-                        </div>
-                    </div>
+                    </section>
+
+                    <section class="dashboard-section" id="open-operations-section">
+                        <h2>Operaciones en Curso</h2>
+                        <div id="open-operations-list"></div>
+                    </section>
+
+                    <section class="dashboard-section" id="completed-operations-section">
+                        <h2>Últimos Registros</h2>
+                        <div id="completed-operations-list"></div>
+                    </section>
                 </div>
             </main>
         </div>

@@ -2,7 +2,7 @@
 import supabase from '../modules/supabase.js';
 import { showChecklistView } from './Checklist.js';
 import { CHECKLIST_ITEMS, TOTAL_CHECKLIST_ITEMS } from '../config.js';
-import { getOpenOperations } from '../services/operationService.js';
+import { getOpenOperations, getCompletedOperations } from '../services/operationService.js';
 import { getBulkChecklistProgress } from '../services/checklistService.js';
 import { hideAllViews } from '../utils/viewUtils.js';
 
@@ -20,6 +20,7 @@ const submitButton = form.querySelector('button[type="submit"]');
 const lastOperationContainer = document.getElementById('last-operation-container');
 const lastOperationDetails = document.getElementById('last-operation-details');
 const openOperationsList = document.getElementById('open-operations-list');
+const completedOperationsList = document.getElementById('completed-operations-list');
 
 function populateSelect(selectElement, data, valueField, textField, placeholder) {
     selectElement.innerHTML = `<option value="">${placeholder}</option>`;
@@ -90,15 +91,16 @@ async function handleFormSubmit(event) {
     const area_id = formData.get('silo_selector') || formData.get('celda_selector');
 
     // Verificar si ya existe una operación en curso para esta combinación
+    // Se usa .maybeSingle() para evitar el error 406 si hay múltiples resultados (aunque no debería ocurrir)
     const { data: existingOperation, error: checkError } = await supabase
         .from('operaciones')
         .select('*')
         .eq('cliente_id', cliente_id)
         .eq('area_id', area_id)
         .eq('status', 'in-progress')
-        .single();
-D
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116: No rows found, lo cual es bueno en este caso.
+        .maybeSingle(); // Usamos maybeSingle para evitar el error 406
+
+    if (checkError) {
         console.error('Error al verificar operaciones existentes:', checkError);
         alert('No se pudo verificar si la operación ya existe. Inténtalo de nuevo.');
         submitButton.disabled = false;
@@ -164,6 +166,7 @@ D
         form.reset();
         handleAreaTypeChange();
         fetchAndRenderOpenOperations(user); // Actualizar la lista de operaciones abiertas
+        fetchAndRenderCompletedOperations(user); // Actualizar la lista de operaciones completadas
     }
 
     submitButton.disabled = false;
@@ -198,37 +201,105 @@ async function fetchAndRenderOpenOperations(user) {
     openOperationsList.innerHTML = operations.map(op => {
         const clientName = op.clientes?.name || 'N/A';
         const areaName = op.areas ? `${op.areas.type} ${op.areas.code}` : 'N/A';
-        const completedCount = progressMap.get(op.id) || 0;
-        const progressPercentage = (completedCount / TOTAL_CHECKLIST_ITEMS) * 100;
-
+        const progress = progressMap.get(op.id) || 0;
+        const progressPercentage = (progress / TOTAL_CHECKLIST_ITEMS) * 100;
         return `
-            <div class="open-operation-item" data-operation-id='${op.id}'>
-                <div class="operation-info">
-                    <p><strong>Cliente:</strong> ${clientName}</p>
-                    <p><strong>Área:</strong> ${areaName}</p>
-                </div>
-                <div class="operation-progress">
-                    <small>${completedCount} de ${TOTAL_CHECKLIST_ITEMS} completados</small>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${progressPercentage}%;"></div>
+            <div class="operation-row">
+                <div class="operation-cell" data-label="Cliente">${clientName}</div>
+                <div class="operation-cell" data-label="Área">${areaName}</div>
+                <div class="operation-cell" data-label="Progreso">
+                    <div class="progress-bar-container-xsmall">
+                        <div class="progress-bar-fill-xsmall" style="width: ${progressPercentage}%;"></div>
                     </div>
+                    <span class="progress-text-xsmall">${progress}/${TOTAL_CHECKLIST_ITEMS}</span>
                 </div>
-                <button class="btn-continue">
-                    <span class="material-icons-outlined">play_arrow</span>
-                    Continuar
-                </button>
+                <div class="operation-cell operation-actions">
+                    <button class="btn-secondary continue-operation-btn" data-operation-id='${op.id}'>
+                        <span class="material-icons-outlined">play_arrow</span>
+                        Continuar
+                    </button>
+                    <button class="btn-primary finalize-operation-btn" data-operation-id='${op.id}'>
+                        <span class="material-icons-outlined">check_circle</span>
+                        Finalizar
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
 
-    openOperationsList.querySelectorAll('.open-operation-item').forEach(item => {
-        const button = item.querySelector('.btn-continue');
-        button.addEventListener('click', () => {
-            const operationId = item.dataset.operationId;
-            const selectedOperation = operations.find(op => op.id == operationId);
-            showChecklistView(selectedOperation, user);
+    document.querySelectorAll('.continue-operation-btn').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const operationId = e.currentTarget.dataset.operationId;
+            const operation = operations.find(op => op.id == operationId);
+            if (operation) {
+                showChecklistView(operation, user);
+            }
         });
     });
+    document.querySelectorAll('.finalize-operation-btn').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const operationId = e.currentTarget.dataset.operationId;
+            const operation = operations.find(op => op.id == operationId);
+            if (operation) {
+                // Aquí puedes abrir la vista de cálculo/finalización o llamar a la función de finalizar
+                // Por ahora, redirigimos a la vista de cálculo
+                import('../views/Calculation.js').then(module => {
+                    module.showCalculationView(operation, user);
+                });
+            }
+        });
+    });
+}
+
+async function fetchAndRenderCompletedOperations(user) {
+    if (!completedOperationsList) return;
+
+    let completedOperations = [];
+    try {
+        completedOperations = await getCompletedOperations(user.id);
+    } catch (error) {
+        completedOperationsList.innerHTML = '<p class="text-red-500">No se pudieron cargar las operaciones finalizadas.</p>';
+        return;
+    }
+
+    if (!completedOperations || completedOperations.length === 0) {
+        completedOperationsList.innerHTML = '<p class="text-gray-500">No tienes operaciones finalizadas.</p>';
+        return;
+    }
+
+    completedOperationsList.innerHTML = completedOperations.map(op => {
+        const clientName = op.clientes?.name || 'N/A';
+        const areaName = op.areas ? `${op.areas.type} ${op.areas.code}` : 'N/A';
+        const completedDate = new Date(op.completed_at).toLocaleString('es-AR');
+        return `
+            <div class="operation-row completed">
+                <div class="operation-cell" data-label="Cliente">${clientName}</div>
+                <div class="operation-cell" data-label="Área">${areaName}</div>
+                <div class="operation-cell" data-label="Finalizada">${completedDate}</div>
+                <div class="operation-cell" data-label="Pastillas">${op.pastillas_usadas || 'N/A'}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function continueLastOperation() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: lastOperation } = await supabase
+        .from('operaciones')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'in-progress')
+        .order('fecha', { ascending: false })
+        .limit(1)
+        .single();
+
+    if (lastOperation) {
+        showChecklistView(lastOperation, user);
+    } else {
+        alert('No hay operaciones en curso para continuar.');
+    }
 }
 
 // Paso 1: Indicador de pasos dinámico
@@ -266,7 +337,9 @@ export async function initNewOperationView() {
     document.getElementById('view-dashboard').classList.remove('hidden');
     insertStepIndicator('view-dashboard', 1);
     if (user) {
+        fetchAndPopulateInitialData();
         fetchAndRenderOpenOperations(user);
+        fetchAndRenderCompletedOperations(user);
     }
     form.addEventListener('submit', handleFormSubmit);
     areaTipoSelect.addEventListener('change', handleAreaTypeChange);
