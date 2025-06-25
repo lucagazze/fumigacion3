@@ -64,24 +64,8 @@ export async function updateOperationStatus(operationId, status, completed_at = 
     }
 }
 
-export async function completeOperation(operationId, totalPills, tons) {
-    // Paso 1: Actualizar la operación con los detalles del cálculo y marcarla como completada
-    const { error: updateError } = await supabase
-        .from('operaciones')
-        .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            pastillas_usadas: totalPills,
-            toneladas_tratadas: tons
-        })
-        .eq('id', operationId);
-
-    if (updateError) {
-        console.error('Error al actualizar la operación:', updateError);
-        throw updateError;
-    }
-
-    // Paso 2: Obtener el deposit_id de la operación para saber de dónde descontar el stock.
+export async function registerPillApplication(operationId, totalPills, tons) {
+    // Paso 1: Obtener el deposit_id de la operación para saber de dónde descontar el stock.
     const { data: operationData, error: operationError } = await supabase
         .from('operaciones')
         .select('deposit_id')
@@ -95,6 +79,20 @@ export async function completeOperation(operationId, totalPills, tons) {
 
     const depositId = operationData.deposit_id;
 
+    // Paso 2: Registrar la nueva aplicación de pastillas
+    const { error: insertError } = await supabase
+        .from('aplicaciones')
+        .insert([{
+            operacion_id: operationId,
+            pastillas_usadas: totalPills,
+            toneladas_tratadas: tons
+        }]);
+
+    if (insertError) {
+        console.error('Error al registrar la aplicación de pastillas:', insertError);
+        throw insertError;
+    }
+
     // Paso 3: Llamar a la función RPC de Supabase para actualizar el stock de forma segura
     const { error: rpcError } = await supabase.rpc('actualizar_stock', {
         cantidad: totalPills,
@@ -103,9 +101,8 @@ export async function completeOperation(operationId, totalPills, tons) {
 
     if (rpcError) {
         console.error('Error al actualizar el stock:', rpcError);
-        // Opcional: Revertir el estado de la operación si la actualización de stock falla
-        await updateOperationStatus(operationId, 'in-progress');
-        throw new Error('La actualización del stock falló. La operación no se ha finalizado.');
+        // Idealmente, esto debería ser una transacción. Como no lo es, informamos del problema.
+        throw new Error('La actualización del stock falló. La aplicación fue registrada pero el stock no fue descontado. Contacte a un administrador.');
     }
 
     return { success: true };

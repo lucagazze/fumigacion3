@@ -1,7 +1,7 @@
 // src/js/views/Calculation.js
 import { insertStepIndicator } from './NewOperation.js';
 import { hideAllViews } from '../utils/viewUtils.js';
-import { completeOperation } from '../services/operationService.js';
+import { registerPillApplication } from '../services/operationService.js';
 
 const calculationView = document.getElementById('view-calculation');
 const checklistView = document.getElementById('view-checklist');
@@ -74,19 +74,23 @@ async function handleCalculationSubmit(e, operation) {
             <hr>
             <p class="result-final"><strong>Total de Pastillas a Utilizar:</strong> ${totalPills}</p>
         </div>
-        <button id="finalize-operation-btn" class="btn-primary mt-4">Finalizar y Registrar Salida de Stock</button>
+        <button id="register-application-btn" class="btn-primary mt-4">Registrar Aplicación y Descontar Stock</button>
     `;
 
-    document.getElementById('finalize-operation-btn').addEventListener('click', async () => {
+    document.getElementById('register-application-btn').addEventListener('click', async () => {
         try {
-            // Aquí llamamos al servicio para completar la operación y actualizar el stock
-            await completeOperation(operation.id, totalPills, tons);
-            alert('¡Operación finalizada y stock actualizado con éxito!');
-            // Redirigir al dashboard o mostrar un mensaje de éxito final.
-            window.location.reload(); // La forma más simple de volver al inicio.
+            // Aquí llamamos al nuevo servicio para registrar la aplicación sin finalizar la operación
+            await registerPillApplication(operation.id, totalPills, tons);
+            alert('¡Aplicación registrada y stock actualizado con éxito! La operación sigue "en curso". Puede registrar otra aplicación o volver al checklist.');
+            
+            // Limpiamos el formulario para una posible nueva aplicación
+            calculationForm.reset();
+            calculationResult.innerHTML = '';
+            handleModalityChange();
+
         } catch (error) {
-            console.error('Error al finalizar la operación:', error);
-            alert(`Error al finalizar la operación: ${error.message}`);
+            console.error('Error al registrar la aplicación:', error);
+            alert(`Error al registrar la aplicación: ${error.message}`);
         }
     });
 }

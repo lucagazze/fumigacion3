@@ -2,7 +2,8 @@
 import supabase from '../modules/supabase.js';
 
 export async function createInitialChecklist(operationId, items) {
-    const itemsToInsert = items.map(item => ({ ...item, operacion_id: operationId }));
+    // Corregido: Usar operation_id para consistencia
+    const itemsToInsert = items.map(item => ({ ...item, operation_id: operationId }));
     const { error } = await supabase.from('checklist').insert(itemsToInsert);
 
     if (error) {
@@ -58,9 +59,13 @@ export async function getBulkChecklistProgress(operationIds) {
     }
 
     const progressMap = new Map();
-    data.forEach(p => {
-        const count = progressMap.get(p.operation_id) || 0;
-        progressMap.set(p.operation_id, count + 1);
+    // Inicializar el mapa para todas las operaciones solicitadas
+    operationIds.forEach(id => progressMap.set(id, 0));
+
+    // Contar los items completados para cada operación
+    data.forEach(item => {
+        progressMap.set(item.operation_id, (progressMap.get(item.operation_id) || 0) + 1);
     });
+
     return progressMap;
 }

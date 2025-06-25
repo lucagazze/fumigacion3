@@ -152,7 +152,8 @@ async function handleFormSubmit(event) {
         submitButton.innerHTML = '<span class="material-icons-outlined">play_arrow</span> Iniciar Operación';
     } else {
         const newOperation = data;
-        const itemsToInsert = checklistItems.map(item => ({ ...item, operacion_id: newOperation.id }));
+        // Corregido: Usar operation_id para consistencia
+        const itemsToInsert = checklistItems.map(item => ({ ...item, operation_id: newOperation.id }));
         
         const { error: checklistError } = await supabase.from('checklist').insert(itemsToInsert);
         
