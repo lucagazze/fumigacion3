@@ -1,5 +1,8 @@
 // src/js/views/Checklist.js
-import { supabase } from '../modules/supabase.js';
+import supabase from '../modules/supabase.js';
+import { showCalculationView } from './Calculation.js';
+import { hideAllViews } from '../utils/viewUtils.js';
+import { insertStepIndicator } from './NewOperation.js';
 
 const dashboardView = document.getElementById('view-dashboard');
 const checklistView = document.getElementById('view-checklist');
@@ -70,11 +73,14 @@ async function loadChecklistProgress(operationId) {
 }
 
 function goBackToDashboard() {
-    if (checklistView) checklistView.classList.add('hidden');
-    if (dashboardView) dashboardView.style.display = 'flex';
+    hideAllViews();
+    if (dashboardView) {
+        dashboardView.classList.remove('hidden');
+    }
+    insertStepIndicator('view-dashboard', 1);
 }
 
-async function updateChecklistProgress(operationId) {
+function updateChecklistProgress() {
     const checkedItems = checklistItemsContainer.querySelectorAll('input[type="checkbox"]:checked').length;
     const totalItems = CHECKLIST_ITEMS.length;
     const progress = totalItems > 0 ? (checkedItems / totalItems) * 100 : 0;
@@ -88,20 +94,7 @@ async function updateChecklistProgress(operationId) {
     if (continueChecklistBtn) {
         const isComplete = checkedItems === totalItems;
         continueChecklistBtn.disabled = !isComplete;
-        continueChecklistBtn.textContent = isComplete ? 'Finalizar Operación' : 'Continuar';
-
-        if (isComplete) {
-            try {
-                const { error } = await supabase
-                    .from('operaciones')
-                    .update({ status: 'completed', completed_at: new Date().toISOString() })
-                    .eq('id', operationId);
-                if (error) throw error;
-                console.log(`Operación ${operationId} marcada como completada.`);
-            } catch (error) {
-                console.error('Error al actualizar el estado de la operación:', error.message);
-            }
-        }
+        continueChecklistBtn.textContent = isComplete ? 'Ir al Cálculo' : 'Continuar';
     }
 }
 
@@ -131,10 +124,11 @@ async function renderChecklistItems(operationId) {
     checkboxes.forEach((checkbox, index) => {
         checkbox.addEventListener('change', (event) => {
             saveChecklistProgress(operationId, index, event.target.checked);
+            updateChecklistProgress();
         });
     });
 
-    updateChecklistProgress(operationId);
+    updateChecklistProgress();
 }
 
 /**
@@ -143,26 +137,22 @@ async function renderChecklistItems(operationId) {
  * @param {object} user - El objeto del usuario actual.
  */
 export async function showChecklistView(operation, user) {
-    console.log('Navegando a la vista de checklist para la operación:', operation.id);
-    
-    if (dashboardView) dashboardView.style.display = 'none';
+    hideAllViews();
     if (checklistView) checklistView.classList.remove('hidden');
-    
+    insertStepIndicator('view-checklist', 2);
     if (userEmailDisplayChecklist && user) {
         userEmailDisplayChecklist.textContent = user.email;
     }
-
     await renderChecklistItems(operation.id);
-
+    
     if (backToDashboardBtn) {
-        backToDashboardBtn.removeEventListener('click', goBackToDashboard);
-        backToDashboardBtn.addEventListener('click', goBackToDashboard);
+        backToDashboardBtn.onclick = goBackToDashboard;
     }
 
     if (continueChecklistBtn) {
         continueChecklistBtn.onclick = () => {
             if (!continueChecklistBtn.disabled) {
-                goBackToDashboard();
+                showCalculationView(operation, user);
             }
         };
     }

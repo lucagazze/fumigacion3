@@ -21,16 +21,25 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
-/* --- VISTA DE LOGIN --- */
+/* --- VISTAS GENERALES --- */
 .view {
     width: 100%;
     box-sizing: border-box;
+    flex: 1 0 auto;
+    min-height: 0;
+    /* Elimina min-height: 100vh para evitar stacking de vistas */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
 }
 
 #view-login {
@@ -82,10 +91,11 @@ body {
 }
 
 /* --- LAYOUT DE LA APLICACIÓN (Dashboard) --- */
-#view-dashboard, #view-checklist {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+#view-dashboard, #view-checklist, #view-calculation {
+    flex: 1 0 auto;
+    min-height: 0;
+    width: 100%;
+    padding-bottom: 0;
 }
 
 .app-header {
@@ -324,4 +334,22 @@ body {
     background-color: var(--border-color);
     color: var(--text-secondary);
     cursor: not-allowed;
+}
+
+/* --- Mejora para el flujo de pasos --- */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.step-indicator .step {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--border-color);
+    transition: background 0.2s;
+}
+.step-indicator .step.active {
+    background: var(--primary-color);
 }

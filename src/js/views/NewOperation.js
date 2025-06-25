@@ -1,6 +1,10 @@
 // src/js/views/NewOperation.js
 import supabase from '../modules/supabase.js';
 import { showChecklistView } from './Checklist.js';
+import { CHECKLIST_ITEMS, TOTAL_CHECKLIST_ITEMS } from '../config.js';
+import { getOpenOperations } from '../services/operationService.js';
+import { getBulkChecklistProgress } from '../services/checklistService.js';
+import { hideAllViews } from '../utils/viewUtils.js';
 
 let allAreas = [];
 let lastOperationData = {};
@@ -93,7 +97,7 @@ async function handleFormSubmit(event) {
         .eq('area_id', area_id)
         .eq('status', 'in-progress')
         .single();
-
+D
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116: No rows found, lo cual es bueno en este caso.
         console.error('Error al verificar operaciones existentes:', checkError);
         alert('No se pudo verificar si la operación ya existe. Inténtalo de nuevo.');
@@ -169,47 +173,57 @@ async function handleFormSubmit(event) {
 async function fetchAndRenderOpenOperations(user) {
     if (!openOperationsList) return;
 
-    const { data: operations, error } = await supabase
-        .from('operaciones')
-        .select(`
-            id, fecha,
-            clientes ( name ),
-            areas ( type, code )
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'in-progress')
-        .order('fecha', { ascending: false });
-
-    if (error) {
-        console.error('Error cargando operaciones abiertas:', error);
+    let operations = [];
+    try {
+        operations = await getOpenOperations(user.id);
+    } catch (error) {
         openOperationsList.innerHTML = '<p class="text-red-500">No se pudieron cargar las operaciones.</p>';
         return;
     }
 
-    if (operations.length === 0) {
+    if (!operations || operations.length === 0) {
         openOperationsList.innerHTML = '<p class="text-gray-500">No tienes operaciones en curso.</p>';
         return;
+    }
+
+    // Cargar el progreso de todas las operaciones de una vez
+    const operationIds = operations.map(op => op.id);
+    let progressMap = new Map();
+    try {
+        progressMap = await getBulkChecklistProgress(operationIds);
+    } catch (progressError) {
+        console.error('Error cargando el progreso del checklist:', progressError);
     }
 
     openOperationsList.innerHTML = operations.map(op => {
         const clientName = op.clientes?.name || 'N/A';
         const areaName = op.areas ? `${op.areas.type} ${op.areas.code}` : 'N/A';
+        const completedCount = progressMap.get(op.id) || 0;
+        const progressPercentage = (completedCount / TOTAL_CHECKLIST_ITEMS) * 100;
+
         return `
             <div class="open-operation-item" data-operation-id='${op.id}'>
                 <div class="operation-info">
-                    <span class="client-name">${clientName}</span>
-                    <span class="area-name">${areaName}</span>
+                    <p><strong>Cliente:</strong> ${clientName}</p>
+                    <p><strong>Área:</strong> ${areaName}</p>
                 </div>
-                <button class="btn-primary btn-continue">
-                    <span>Continuar</span>
-                    <span class="material-icons-outlined">arrow_forward</span>
+                <div class="operation-progress">
+                    <small>${completedCount} de ${TOTAL_CHECKLIST_ITEMS} completados</small>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${progressPercentage}%;"></div>
+                    </div>
+                </div>
+                <button class="btn-continue">
+                    <span class="material-icons-outlined">play_arrow</span>
+                    Continuar
                 </button>
             </div>
         `;
     }).join('');
 
     openOperationsList.querySelectorAll('.open-operation-item').forEach(item => {
-        item.addEventListener('click', () => {
+        const button = item.querySelector('.btn-continue');
+        button.addEventListener('click', () => {
             const operationId = item.dataset.operationId;
             const selectedOperation = operations.find(op => op.id == operationId);
             showChecklistView(selectedOperation, user);
@@ -217,8 +231,40 @@ async function fetchAndRenderOpenOperations(user) {
     });
 }
 
+// Paso 1: Indicador de pasos dinámico
+function renderStepIndicator(step) {
+    // step: 1 = datos, 2 = checklist, 3 = cálculo
+    const indicator = document.createElement('div');
+    indicator.className = 'step-indicator';
+    indicator.innerHTML = `
+        <div class="step${step === 1 ? ' active' : ''}"></div>
+        <div class="step${step === 2 ? ' active' : ''}"></div>
+        <div class="step${step === 3 ? ' active' : ''}"></div>
+    `;
+    return indicator;
+}
+
+// Paso 2: Insertar el indicador en cada vista
+export function insertStepIndicator(viewId, step) {
+    const view = document.getElementById(viewId);
+    if (!view) return;
+    let existing = view.querySelector('.step-indicator');
+    if (existing) existing.remove();
+    const main = view.querySelector('.form-container, .app-main, main');
+    if (main) {
+        main.prepend(renderStepIndicator(step));
+    } else {
+        view.prepend(renderStepIndicator(step));
+    }
+}
+
+// Paso 3: Asegurar que la vista principal se muestre correctamente
 export async function initNewOperationView() {
     const { data: { user } } = await supabase.auth.getUser();
+    // Mostrar solo el dashboard
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById('view-dashboard').classList.remove('hidden');
+    insertStepIndicator('view-dashboard', 1);
     if (user) {
         fetchAndRenderOpenOperations(user);
     }
@@ -226,3 +272,11 @@ export async function initNewOperationView() {
     areaTipoSelect.addEventListener('change', handleAreaTypeChange);
     fetchAndPopulateInitialData();
 }
+
+// Paso 4: Mostrar el indicador en el checklist y cálculo
+import { showCalculationView } from './Calculation.js';
+
+// En tu función showChecklistView (en Checklist.js), agrega:
+// insertStepIndicator('view-checklist', 2);
+// En showCalculationView (Calculation.js), agrega:
+// insertStepIndicator('view-calculation', 3);

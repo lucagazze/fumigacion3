@@ -132,6 +132,59 @@
                 </div>
             </main>
         </div>
+
+        <div id="view-calculation" class="view hidden">
+        <header class="app-header">
+            <button id="back-to-checklist-btn" class="header-back-btn" title="Volver">
+                <span class="material-icons-outlined">arrow_back</span>
+            </button>
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path></svg>
+                </div>
+                <h1>Fagaz</h1>
+            </div>
+        </header>
+        <main class="app-main">
+            <div class="form-container">
+                <h2>Fase Final: Cálculo de Pastillas</h2>
+                <div id="calculation-content">
+                    <form id="calculation-form">
+                        <div class="form-group">
+                            <label for="treatment-modality">Modalidad</label>
+                            <select id="treatment-modality" name="treatment-modality" class="input-field form-select" required>
+                                <option value="">Seleccionar modalidad</option>
+                                <option value="descarga">Descarga de camiones</option>
+                                <option value="traslado">Traslado</option>
+                            </select>
+                        </div>
+
+                        <div id="truck-load-container" class="form-group hidden">
+                            <label for="truck-quantity">Cantidad de camiones</label>
+                            <input type="number" id="truck-quantity" name="truck-quantity" class="input-field" min="1">
+                        </div>
+
+                        <div id="direct-tn-container" class="form-group hidden">
+                            <label for="direct-tn">Toneladas</label>
+                            <input type="number" id="direct-tn" name="direct-tn" class="input-field" min="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="treatment-type">Tipo de tratamiento</label>
+                            <select id="treatment-type" name="treatment-type" class="input-field form-select" required>
+                                <option value="">Seleccionar tipo</option>
+                                <option value="preventivo">Preventivo (2 pastillas/tn)</option>
+                                <option value="curativo">Curativo (3 pastillas/tn)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Calcular</button>
+                    </form>
+                    <div id="calculation-result" class="mt-4"></div>
+                </div>
+            </div>
+        </main>
+    </div>
     </div>
     <script src="src/js/main.js" type="module"></script>
 </body>
