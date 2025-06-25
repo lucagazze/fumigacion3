@@ -19,7 +19,7 @@
     <div id="app">
         <main id="view-login" class="view">
             <div class="login-container">
-                <img src="https://raw.githubusercontent.com/google/material-design-icons/master/png/action/bug_report/materialicons/96dp/1x/baseline_bug_report_black_96dp.png" alt="Fagaz Logo" class="login-logo">
+                <img src="https://www.svgrepo.com/show/443292/bug.svg" alt="Fagaz Logo" class="login-logo">
                 <h2>Iniciar Sesión</h2>
                 <p>Accede a tu panel de operario.</p>
                 <form id="login-form">
@@ -52,59 +52,95 @@
                     </button>
                 </div>
             </header>
-            
             <main class="app-main">
-                <div class="form-container">
-                    <h2>Nueva Operación de Fumigación</h2>
-                    <form id="new-operation-form" class="space-y-6">
-                        <div>
-                            <label class="label-text" for="deposito-select">Depósito</label>
-                            <select class="input-field form-select" id="deposito-select" name="deposito" required>
-                                <option value="">Cargando...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="label-text" for="cliente-select">Cliente</label>
-                            <select class="input-field form-select" id="cliente-select" name="cliente" required>
-                                 <option value="">Cargando...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="label-text" for="area-tipo-select">Tipo de Área</label>
-                            <select class="input-field form-select" id="area-tipo-select" name="area_tipo" required>
-                                <option value="">Seleccionar Tipo de Área</option>
-                                <option value="Silo">Silo</option>
-                                <option value="Celda">Celda</option>
-                            </select>
-                        </div>
-                        <div id="silo-selector-container" class="hidden">
-                            <label class="label-text" for="silo-selector">Silo</for>
-                            <select class="input-field form-select" id="silo-selector" name="silo_selector" required>
-                                <option value="">Cargando...</option>
-                            </select>
-                        </div>
-                        <div id="celda-selector-container" class="hidden">
-                            <label class="label-text" for="celda-selector">Celda</label>
-                            <select class="input-field form-select" id="celda-selector" name="celda_selector" required>
-                                <option value="">Cargando...</option>
-                            </select>
-                        </div>
-                        <div class="pt-4 flex justify-end">
-                            <button type="submit" class="btn-primary flex items-center justify-center">
-                                <span class="material-icons-outlined">play_arrow</span>
-                                Iniciar Operación
-                            </button>
-                        </div>
-                    </form>
+                <div id="new-operation-view-container">
+                    <div class="form-container">
+                        <h2>Nueva Operación de Fumigación</h2>
+                        <form id="new-operation-form" class="space-y-6">
+                            <div>
+                                <label class="label-text" for="deposito-select">Depósito</label>
+                                <select class="input-field form-select" id="deposito-select" name="deposito" required>
+                                    <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-text" for="cliente-select">Cliente</label>
+                                <select class="input-field form-select" id="cliente-select" name="cliente" required>
+                                     <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-text" for="area-tipo-select">Tipo de Área</label>
+                                <select class="input-field form-select" id="area-tipo-select" name="area_tipo" required>
+                                    <option value="">Seleccionar Tipo de Área</option>
+                                    <option value="Silo">Silo</option>
+                                    <option value="Celda">Celda</option>
+                                </select>
+                            </div>
+                            <div id="silo-selector-container" class="hidden">
+                                <label class="label-text" for="silo-selector">Silo</for>
+                                <select class="input-field form-select" id="silo-selector" name="silo_selector" required>
+                                    <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div id="celda-selector-container" class="hidden">
+                                <label class="label-text" for="celda-selector">Celda</label>
+                                <select class="input-field form-select" id="celda-selector" name="celda_selector" required>
+                                    <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div class="pt-4 flex justify-end">
+                                <button type="submit" class="btn-primary flex items-center justify-center">
+                                    <span class="material-icons-outlined">play_arrow</span>
+                                    Iniciar Operación
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </main>
-
             <footer class="app-footer">
                 <p>© 2025 Fagaz Servicios de Fumigación. Todos los derechos reservados.</p>
             </footer>
         </div>
-    </div>
 
-    <script type="module" src="src/js/main.js"></script>
+        <div id="view-checklist" class="view hidden">
+            <header class="app-header">
+                <button id="back-to-dashboard-btn" class="header-back-btn" title="Volver">
+                    <span class="material-icons-outlined">arrow_back</span>
+                </button>
+                <div class="header-logo">
+                    <div class="logo-icon">
+                         <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path></svg>
+                    </div>
+                    <h1>Fagaz</h1>
+                </div>
+                <div class="header-user">
+                    <span id="user-email-display-checklist"></span>
+                </div>
+            </header>
+            <main class="app-main">
+                <div class="form-container">
+                    <div class="checklist-header">
+                        <h2>Checklist de Operación</h2>
+                        <div id="checklist-progress-badge" class="progress-badge">Progreso: 0/4</div>
+                    </div>
+                    <div id="checklist-items-container" class="space-y-4">
+                        </div>
+                    <div class="progress-bar-container">
+                        <div id="checklist-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="pt-4 flex justify-end">
+                        <button id="continue-checklist-btn" class="btn-primary" disabled>
+                            Continuar
+                            <span class="material-icons-outlined">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+    </div>
+    <script src="src/js/main.js" type="module"></script>
 </body>
 </html>

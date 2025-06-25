@@ -51,6 +51,7 @@ body {
 .login-logo {
     width: 80px;
     margin-bottom: 1rem;
+    color: var(--primary-color);
 }
 
 .form-group {
@@ -81,10 +82,10 @@ body {
 }
 
 /* --- LAYOUT DE LA APLICACIÓN (Dashboard) --- */
-#view-dashboard {
+#view-dashboard, #view-checklist {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .app-header {
@@ -122,13 +123,13 @@ body {
     gap: 1rem;
 }
 
-#user-email-display {
+#user-email-display, #user-email-display-checklist {
     font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
-#logout-button {
+#logout-button, .header-back-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -139,18 +140,15 @@ body {
     align-items: center;
     justify-content: center;
 }
-#logout-button:hover {
+#logout-button:hover, .header-back-btn:hover {
     background-color: var(--secondary-color);
     color: var(--text-primary);
 }
-
-
 .app-main {
     flex-grow: 1;
     padding: 2rem 1rem;
     overflow-y: auto;
 }
-
 .app-footer {
     text-align: center;
     padding: 1.5rem;
@@ -169,14 +167,15 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
-
 .form-container h2 {
     font-size: 1.75rem;
     font-weight: 800;
     margin-top: 0;
     margin-bottom: 2rem;
 }
-
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
 .space-y-6 > * + * {
     margin-top: 1.5rem;
 }
@@ -188,7 +187,6 @@ body {
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
-
 .input-field {
     width: 100%;
     height: 3rem;
@@ -201,7 +199,6 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
 }
-
 .input-field:focus {
     outline: none;
     border-color: var(--primary-color);
@@ -219,14 +216,44 @@ body {
     padding-right: 2.5rem;
 }
 
-.pt-4 {
-    padding-top: 1rem;
-}
-
+.pt-4 { padding-top: 1rem; }
 .flex { display: flex; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
 .justify-end { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+
+/* --- ESTILOS DE LA VISTA CHECKLIST --- */
+.checklist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.checklist-header h2 {
+    margin: 0;
+}
+.progress-badge {
+    background-color: var(--secondary-color);
+    color: var(--text-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+.progress-bar-container {
+    width: 100%;
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    height: 10px;
+    margin-top: 2rem;
+}
+.progress-bar-fill {
+    background-color: var(--primary-color);
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.3s ease-in-out;
+}
 
 /* --- BOTONES --- */
 .btn-primary, .btn-secondary {
@@ -237,13 +264,18 @@ body {
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.2s;
-    width: auto; /* Anulamos el width:100% del login */
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
-
 .btn-primary {
     background-color: var(--primary-color);
     color: var(--text-primary);
-    gap: 0.5rem;
 }
-
 .btn-primary:hover { background-color: #45a423; }
+.btn-primary:disabled {
+    background-color: var(--border-color);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
