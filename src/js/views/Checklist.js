@@ -1,4 +1,5 @@
 // src/js/views/Checklist.js
+import { supabase } from '../modules/supabase.js';
 
 const dashboardView = document.getElementById('view-dashboard');
 const checklistView = document.getElementById('view-checklist');
@@ -16,12 +17,64 @@ const CHECKLIST_ITEMS = [
     "Colocar cartelería"
 ];
 
+/**
+ * Guarda el estado de un item del checklist en la base de datos.
+ * @param {number} operationId - El ID de la operación.
+ * @param {number} itemIndex - El índice del item en el array CHECKLIST_ITEMS.
+ * @param {boolean} isCompleted - Si el item está completado o no.
+ */
+async function saveChecklistProgress(operationId, itemIndex, isCompleted) {
+    try {
+        const { data, error } = await supabase
+            .from('checklist_progress')
+            .upsert({
+                operation_id: operationId,
+                item_index: itemIndex,
+                completed: isCompleted
+            }, {
+                onConflict: 'operation_id, item_index'
+            });
+
+        if (error) throw error;
+        
+        // Actualizar la UI después de guardar
+        updateChecklistProgress(operationId);
+    } catch (error) {
+        console.error('Error al guardar el progreso del checklist:', error.message);
+    }
+}
+
+/**
+ * Carga el progreso del checklist para una operación específica.
+ * @param {number} operationId - El ID de la operación.
+ * @returns {Promise<Map<number, boolean>>} Un mapa con el índice del item y su estado.
+ */
+async function loadChecklistProgress(operationId) {
+    try {
+        const { data, error } = await supabase
+            .from('checklist_progress')
+            .select('item_index, completed')
+            .eq('operation_id', operationId);
+
+        if (error) throw error;
+
+        const progressMap = new Map();
+        data.forEach(item => {
+            progressMap.set(item.item_index, item.completed);
+        });
+        return progressMap;
+    } catch (error) {
+        console.error('Error al cargar el progreso del checklist:', error.message);
+        return new Map();
+    }
+}
+
 function goBackToDashboard() {
     if (checklistView) checklistView.classList.add('hidden');
     if (dashboardView) dashboardView.style.display = 'flex';
 }
 
-function updateChecklistProgress() {
+async function updateChecklistProgress(operationId) {
     const checkedItems = checklistItemsContainer.querySelectorAll('input[type="checkbox"]:checked').length;
     const totalItems = CHECKLIST_ITEMS.length;
     const progress = totalItems > 0 ? (checkedItems / totalItems) * 100 : 0;
@@ -33,19 +86,37 @@ function updateChecklistProgress() {
         checklistProgressBar.style.width = `${progress}%`;
     }
     if (continueChecklistBtn) {
-        continueChecklistBtn.disabled = checkedItems !== totalItems;
+        const isComplete = checkedItems === totalItems;
+        continueChecklistBtn.disabled = !isComplete;
+        continueChecklistBtn.textContent = isComplete ? 'Finalizar Operación' : 'Continuar';
+
+        if (isComplete) {
+            try {
+                const { error } = await supabase
+                    .from('operaciones')
+                    .update({ status: 'completed', completed_at: new Date().toISOString() })
+                    .eq('id', operationId);
+                if (error) throw error;
+                console.log(`Operación ${operationId} marcada como completada.`);
+            } catch (error) {
+                console.error('Error al actualizar el estado de la operación:', error.message);
+            }
+        }
     }
 }
 
-function renderChecklistItems() {
+async function renderChecklistItems(operationId) {
     if (!checklistItemsContainer) return;
     checklistItemsContainer.innerHTML = ''; // Limpiar para evitar duplicados
 
+    const progressMap = await loadChecklistProgress(operationId);
+
     CHECKLIST_ITEMS.forEach((item, index) => {
         const itemId = `checklist-item-${index}`;
+        const isChecked = progressMap.get(index) || false;
         const itemHTML = `
             <div class="checklist-item-wrapper">
-                <input type="checkbox" id="${itemId}" name="${itemId}" class="checklist-checkbox">
+                <input type="checkbox" id="${itemId}" name="${itemId}" class="checklist-checkbox" ${isChecked ? 'checked' : ''}>
                 <label for="${itemId}" class="checklist-label">${item}</label>
                 <button class="btn-icon" aria-label="Adjuntar foto para ${item}">
                     <span class="material-icons-outlined">photo_camera</span>
@@ -57,9 +128,13 @@ function renderChecklistItems() {
     });
 
     const checkboxes = checklistItemsContainer.querySelectorAll('.checklist-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateChecklistProgress);
+    checkboxes.forEach((checkbox, index) => {
+        checkbox.addEventListener('change', (event) => {
+            saveChecklistProgress(operationId, index, event.target.checked);
+        });
     });
+
+    updateChecklistProgress(operationId);
 }
 
 /**
@@ -67,7 +142,7 @@ function renderChecklistItems() {
  * @param {object} operation - El objeto de la operación creada.
  * @param {object} user - El objeto del usuario actual.
  */
-export function showChecklistView(operation, user) {
+export async function showChecklistView(operation, user) {
     console.log('Navegando a la vista de checklist para la operación:', operation.id);
     
     if (dashboardView) dashboardView.style.display = 'none';
@@ -77,11 +152,18 @@ export function showChecklistView(operation, user) {
         userEmailDisplayChecklist.textContent = user.email;
     }
 
-    renderChecklistItems();
-    updateChecklistProgress();
+    await renderChecklistItems(operation.id);
 
     if (backToDashboardBtn) {
         backToDashboardBtn.removeEventListener('click', goBackToDashboard);
         backToDashboardBtn.addEventListener('click', goBackToDashboard);
+    }
+
+    if (continueChecklistBtn) {
+        continueChecklistBtn.onclick = () => {
+            if (!continueChecklistBtn.disabled) {
+                goBackToDashboard();
+            }
+        };
     }
 }

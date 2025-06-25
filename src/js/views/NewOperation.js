@@ -71,7 +71,7 @@ function handleAreaTypeChange() {
 async function handleFormSubmit(event) {
     event.preventDefault();
     submitButton.disabled = true;
-    submitButton.textContent = 'Guardando...';
+    submitButton.textContent = 'Verificando...';
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -82,7 +82,36 @@ async function handleFormSubmit(event) {
     }
 
     const formData = new FormData(form);
+    const cliente_id = formData.get('cliente');
     const area_id = formData.get('silo_selector') || formData.get('celda_selector');
+
+    // Verificar si ya existe una operación en curso para esta combinación
+    const { data: existingOperation, error: checkError } = await supabase
+        .from('operaciones')
+        .select('*')
+        .eq('cliente_id', cliente_id)
+        .eq('area_id', area_id)
+        .eq('status', 'in-progress')
+        .single();
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116: No rows found, lo cual es bueno en este caso.
+        console.error('Error al verificar operaciones existentes:', checkError);
+        alert('No se pudo verificar si la operación ya existe. Inténtalo de nuevo.');
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<span class="material-icons-outlined">play_arrow</span> Iniciar Operación';
+        return;
+    }
+
+    if (existingOperation) {
+        alert('Ya existe una operación en curso para este cliente y área. Te llevaremos a ella.');
+        showChecklistView(existingOperation, user);
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<span class="material-icons-outlined">play_arrow</span> Iniciar Operación';
+        return;
+    }
+
+    // Si no existe, continuar con la creación
+    submitButton.textContent = 'Guardando...';
     const selectedArea = allAreas.find(area => area.id == area_id);
 
     if (!selectedArea) {
@@ -94,7 +123,7 @@ async function handleFormSubmit(event) {
 
     const operationData = {
         user_id: user.id,
-        cliente_id: formData.get('cliente'),
+        cliente_id: cliente_id,
         area_id: area_id,
         deposit_id: selectedArea.deposit_id, // Corregido: Obtener deposit_id del área
         fecha: new Date().toISOString(),
@@ -167,9 +196,14 @@ async function fetchAndRenderOpenOperations(user) {
         const areaName = op.areas ? `${op.areas.type} ${op.areas.code}` : 'N/A';
         return `
             <div class="open-operation-item" data-operation-id='${op.id}'>
-                <span><strong>Cliente:</strong> ${clientName}</span>
-                <span><strong>Área:</strong> ${areaName}</span>
-                <button class="btn-primary-small">Continuar</button>
+                <div class="operation-info">
+                    <span class="client-name">${clientName}</span>
+                    <span class="area-name">${areaName}</span>
+                </div>
+                <button class="btn-primary btn-continue">
+                    <span>Continuar</span>
+                    <span class="material-icons-outlined">arrow_forward</span>
+                </button>
             </div>
         `;
     }).join('');
@@ -185,4 +219,10 @@ async function fetchAndRenderOpenOperations(user) {
 
 export async function initNewOperationView() {
     const { data: { user } } = await supabase.auth.getUser();
-    if
+    if (user) {
+        fetchAndRenderOpenOperations(user);
+    }
+    form.addEventListener('submit', handleFormSubmit);
+    areaTipoSelect.addEventListener('change', handleAreaTypeChange);
+    fetchAndPopulateInitialData();
+}
