@@ -1,0 +1,21 @@
+{
+    "name": "Fagaz Servicios de Fumigación",
+    "short_name": "Fagaz",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#f9fbf9",
+    "theme_color": "#53d22c",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "src/assets/icons/icon-192x192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "src/assets/icons/icon-512x512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ]
+}
