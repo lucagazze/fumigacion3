@@ -24,7 +24,7 @@ body {
 }
 
 .hidden {
-    display: none !important;
+    display: none;
 }
 
 /* --- VISTA DE LOGIN --- */
@@ -103,6 +103,10 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    /* Para centrar el logo cuando el botón de volver está presente */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .header-logo .logo-icon {
@@ -118,9 +122,7 @@ body {
 }
 
 .header-user {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    margin-left: auto; /* Empuja el user a la derecha */
 }
 
 #user-email-display, #user-email-display-checklist {
@@ -144,11 +146,13 @@ body {
     background-color: var(--secondary-color);
     color: var(--text-primary);
 }
+
 .app-main {
     flex-grow: 1;
     padding: 2rem 1rem;
     overflow-y: auto;
 }
+
 .app-footer {
     text-align: center;
     padding: 1.5rem;
@@ -253,6 +257,48 @@ body {
     height: 100%;
     border-radius: 8px;
     transition: width 0.3s ease-in-out;
+}
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--white);
+}
+.checklist-item label {
+    flex-grow: 1;
+    cursor: pointer;
+}
+.checklist-item input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+.attach-btn {
+    background-color: var(--secondary-color);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+.attach-btn:hover {
+    background-color: var(--border-color);
+}
+.attach-btn.completed {
+    background-color: #e6f7e2; /* Verde muy claro */
+    color: #2f684f;
+}
+.attach-btn .material-icons-outlined {
+    font-size: 1.25rem;
 }
 
 /* --- BOTONES --- */

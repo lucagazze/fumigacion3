@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <meta name="theme-color" content="#53d22c">
     <link rel="manifest" href="manifest.json">
-    
     <title>Fagaz Servicios</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -58,12 +56,6 @@
                         <h2>Nueva Operación de Fumigación</h2>
                         <form id="new-operation-form" class="space-y-6">
                             <div>
-                                <label class="label-text" for="deposito-select">Depósito</label>
-                                <select class="input-field form-select" id="deposito-select" name="deposito" required>
-                                    <option value="">Cargando...</option>
-                                </select>
-                            </div>
-                            <div>
                                 <label class="label-text" for="cliente-select">Cliente</label>
                                 <select class="input-field form-select" id="cliente-select" name="cliente" required>
                                      <option value="">Cargando...</option>
@@ -96,12 +88,13 @@
                                 </button>
                             </div>
                         </form>
+                        <div id="last-operation-container" class="hidden mt-6 p-4 bg-gray-100 rounded-lg">
+                            <h3 class="font-bold mb-2">Última Operación:</h3>
+                            <div id="last-operation-details" class="flex flex-col space-y-1"></div>
+                        </div>
                     </div>
                 </div>
             </main>
-            <footer class="app-footer">
-                <p>© 2025 Fagaz Servicios de Fumigación. Todos los derechos reservados.</p>
-            </footer>
         </div>
 
         <div id="view-checklist" class="view hidden">
@@ -139,7 +132,6 @@
                 </div>
             </main>
         </div>
-
     </div>
     <script src="src/js/main.js" type="module"></script>
 </body>
